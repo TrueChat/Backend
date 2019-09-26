@@ -104,3 +104,8 @@ venv.bak/
 .mypy_cache/
 
 \.idea/
+
+staticfiles/*
+
+
+truechat/truechat/staticfiles/
