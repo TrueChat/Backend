@@ -1,4 +1,5 @@
 from django.conf.urls import url, include
+from django.contrib import admin
 from django.urls import path
 from rest_framework_swagger.views import get_swagger_view
 from custom_auth.views import UserAPIView
@@ -10,4 +11,5 @@ urlpatterns = [
     url(r'^rest-auth/', include('rest_auth.urls')),
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
     path('profile/<pk>/', UserAPIView.as_view()),
+    path('admin/', admin.site.urls)
 ]
