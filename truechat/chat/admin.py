@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Message, Chat
 
 
-class MembershipInline(admin.StackedInline):
+class MembershipInline(admin.TabularInline):
     model = Chat.users.through
     fields = ('user', 'is_admin')
     extra = 1
