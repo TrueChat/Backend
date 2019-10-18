@@ -65,9 +65,9 @@ REST_FRAMEWORK = {
 
 }
 ACCOUNT_LOGOUT_ON_GET = False
-ACCOUNT_EMAIL_CONFIRMATION_ANONYMOUS_REDIRECT_URL = reverse_lazy('account_confirm_complete')
-ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL = reverse_lazy('account_confirm_complete')
-ACCOUNT_EMAIL_VERIFICATION = True
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 
 AUTH_USER_MODEL = 'custom_auth.User'
 
@@ -178,3 +178,10 @@ EMAIL_HOST_USER = 'g1u2s3i4l5e6b7e8d9i@gmail.com'
 EMAIL_HOST_PASSWORD = config('EMAIL_PASSWORD')
 DEFAULT_FROM_EMAIL = 'truechat'
 DEFAULT_TO_EMAIL = 'truechat'
+
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)

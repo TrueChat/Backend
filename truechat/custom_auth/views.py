@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
+from allauth.account.models import EmailConfirmationHMAC
+import requests
 
 from custom_auth.serializers import UserSerializerChange, UserSerializerGet
 
@@ -47,5 +49,8 @@ class UserAPIViewChange(APIView):
 
 
 def confirm_email(request, key):
-    print(key)
+    email_confirmation = EmailConfirmationHMAC.from_key(key)
+    if email_confirmation:
+        email_confirmation.confirm(request)
     return HttpResponseRedirect(reverse_lazy('api'))
+
