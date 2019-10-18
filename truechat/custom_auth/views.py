@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import HttpResponseRedirect
+from django.urls import reverse_lazy
 
 from custom_auth.serializers import UserSerializerChange, UserSerializerGet
 
@@ -42,3 +44,8 @@ class UserAPIViewChange(APIView):
                 return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = UserSerializerGet(user)
         return Response(serializer.data)
+
+
+def confirm_email(request, key):
+    print(key)
+    return HttpResponseRedirect(reverse_lazy('api'))
