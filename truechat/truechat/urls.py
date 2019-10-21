@@ -13,6 +13,9 @@ urlpatterns = [
     url(r'^rest-auth/registration/account-confirm-email/(?P<key>[-:\w]+)/$',
         confirm_email,
         name='account_confirm_email'),
+    url(r'^rest-auth/registration/account-confirm-email/',
+        confirm_email,
+        name='account_email_verification_sent'),
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
     re_path(r'profile/(?P<username>\w+|)', UserAPIViewChange.as_view()),
     path('admin/', admin.site.urls)
