@@ -12,8 +12,6 @@ class Chat(models.Model):
     creator = models.ForeignKey(User, on_delete=models.SET_NULL, verbose_name='Создатель',
                                 related_name='created_chats', null=True)
     is_dialog = models.BooleanField('Личная ли переписка', default=False)
-    notifications = models.BooleanField('Присылать ли нотификации', default=True,
-                                        help_text='Будут ли появляться на телефоне нотификации о сообщении')
     users = models.ManyToManyField(User, related_name='chats', through='Membership')
     date_created = models.DateTimeField('Дата создания', default=timezone.now)
 
@@ -31,6 +29,8 @@ class Membership(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, verbose_name='Чат', related_name='members')
     is_admin = models.BooleanField('Админ ли', default=False)
     date_started = models.DateTimeField('Дата начала общения в чате', default=timezone.now)
+    notifications = models.BooleanField('Присылать ли нотификации', default=True,
+                                        help_text='Будут ли появляться на телефоне нотификации о сообщении')
 
     def __str__(self):
         return f'{self.user}({self.chat})'
