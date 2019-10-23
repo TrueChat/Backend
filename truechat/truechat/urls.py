@@ -23,5 +23,7 @@ urlpatterns = [
 
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
     re_path(r'profile/(?P<username>\w+|)', UserAPIViewChange.as_view()),
+
+    re_path(r'chats/', include('chat.urls')),
     path('admin/', admin.site.urls)
 ]

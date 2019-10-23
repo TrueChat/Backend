@@ -5,7 +5,6 @@ from rest_framework.views import APIView
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from allauth.account.models import EmailConfirmationHMAC
-import requests
 
 from custom_auth.serializers import UserSerializerChange, UserSerializerGet
 

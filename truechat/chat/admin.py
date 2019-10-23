@@ -10,7 +10,7 @@ class MembershipInline(admin.TabularInline):
 
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):
-    fields = ('name', 'description', 'is_dialog', 'notifications')
+    fields = ('name', 'description', 'is_dialog', 'creator')
     list_display = ('name', 'is_dialog')
     inlines = [MembershipInline, ]
 
