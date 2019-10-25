@@ -49,7 +49,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         chats = serializer(queryset, many=True)
         return Response(chats.data)
 
-    @action(detail=True, methods=['post'], url_path='add_member/(?P<username>[^/.]+)')
+    @action(detail=True, methods=['post'], url_path='add_member/(?P<username>[^/.]+)', url_name='add_member')
     def add_member(self, request, username, pk=None):
         try:
             user = User.objects.get(username=username)
@@ -60,6 +60,10 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if chat.is_member(user):
             return Response(data={"errors": ["User is already in the chat"]}, status=status.HTTP_409_CONFLICT)
+
+        # TODO PERMISSION FIX
+        if not chat.is_member(request.user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
         chat.users.add(user)
         chat.save()
         return Response(ChatSerializer(chat).data)
