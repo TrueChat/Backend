@@ -15,6 +15,9 @@ class Chat(models.Model):
     users = models.ManyToManyField(User, related_name='chats', through='Membership')
     date_created = models.DateTimeField('Дата создания', default=timezone.now)
 
+    def is_member(self, user):
+        return self.members.filter(user=user).exists() or self.creator == user
+
     def __str__(self):
         return self.name
 

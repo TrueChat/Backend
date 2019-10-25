@@ -1,14 +1,15 @@
-from rest_framework.views import APIView
+from rest_framework.serializers import Serializer
 from rest_framework.response import Response
 from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 from chat.models import Chat, Message
 from chat.serializers import ChatSerializer, ChatSerializerChange
-from django.db.models import Q
+from custom_auth.models import User
 
 
 class IsChatMember(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        return request.user in obj.users.all() or request.user == obj.creator
+        return obj.is_member(request.user)
 
 
 class IsChatAdmin(permissions.BasePermission):
@@ -20,13 +21,15 @@ class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
 
     def get_serializer_class(self):
+        if self.action in ['add_member']:
+            return Serializer
         if self.action in ['list', 'retrieve']:
             return ChatSerializer
         return ChatSerializerChange
 
     def get_permissions(self):
         permissions_classes = [permissions.IsAuthenticated]
-        if self.action in ['retrieve']:
+        if self.action in ['retrieve', 'add_member']:
             permissions_classes += [IsChatMember]
         elif self.action not in ['list']:
             permissions_classes += [IsChatAdmin]
@@ -46,4 +49,18 @@ class ChatViewSet(viewsets.ModelViewSet):
         chats = serializer(queryset, many=True)
         return Response(chats.data)
 
+    @action(detail=True, methods=['post'], url_path='add_member/(?P<username>[^/.]+)')
+    def add_member(self, request, username, pk=None):
+        try:
+            user = User.objects.get(username=username)
+            chat = Chat.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        except Chat.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if chat.is_member(user):
+            return Response(data={"errors": ["User is already in the chat"]}, status=status.HTTP_409_CONFLICT)
+        chat.users.add(user)
+        chat.save()
+        return Response(ChatSerializer(chat).data)
 

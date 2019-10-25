@@ -10,8 +10,6 @@ schema_view = get_swagger_view(title='TrueChat API')
 urlpatterns = [
     url(r'^$', schema_view, name='api'),
     url(r'^rest-auth/', include('rest_auth.urls')),
-
-
     url(r'^reset/(?P<uidb64>[0-9A-Za-z]+)-(?P<token>.+)/$', confirm_email, name='password_reset_confirm'),
     # after registration user is sent to this url for email confirming
     url(r'^rest-auth/registration/account-confirm-email/(?P<key>[-:\w]+)/$',
