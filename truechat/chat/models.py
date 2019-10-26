@@ -30,7 +30,7 @@ class Chat(models.Model):
 class Membership(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='Участник', related_name='memberships')
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, verbose_name='Чат', related_name='members')
-    is_admin = models.BooleanField('Админ ли', default=False)
+    is_banned = models.BooleanField('Забанен ли?', default=False)
     date_started = models.DateTimeField('Дата начала общения в чате', default=timezone.now)
     notifications = models.BooleanField('Присылать ли нотификации', default=True,
                                         help_text='Будут ли появляться на телефоне нотификации о сообщении')

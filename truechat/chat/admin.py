@@ -4,7 +4,7 @@ from .models import Message, Chat
 
 class MembershipInline(admin.TabularInline):
     model = Chat.users.through
-    fields = ('user', 'is_admin')
+    fields = ('user', 'is_banned')
     extra = 1
 
 
