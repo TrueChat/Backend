@@ -1,10 +1,12 @@
+from allauth.account.models import EmailConfirmationHMAC
 from django.contrib.auth import get_user_model
-from rest_framework import permissions, status
-from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
-from allauth.account.models import EmailConfirmationHMAC
+from rest_framework import permissions, status
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from custom_auth.models import User
 
 from custom_auth.serializers import UserSerializerChange, UserSerializerGet
 
@@ -47,9 +49,30 @@ class UserAPIViewChange(APIView):
         return Response(serializer.data)
 
 
+class UserListView(APIView):
+
+    permission_classes = (
+        permissions.IsAuthenticated,
+    )
+
+    def get(self, request, search_string=None):
+        query = SearchQuery(search_string)
+
+        username_vector = SearchVector('username', weight='A')
+        first_name_vector = SearchVector('first_name', weight='B')
+        last_name_vector = SearchVector('last_name', weight='B')
+        email_vector = SearchVector('email', weight='B')
+        about_vector = SearchVector('about', weight='C')
+        vectors = username_vector + first_name_vector + last_name_vector + email_vector + about_vector
+        qs = User.objects
+        qs = qs.annotate(search=vectors).filter(search=query)
+        qs = qs.annotate(rank=SearchRank(vectors, query)).order_by('-rank')
+        print(qs)
+        return Response(UserSerializerGet(qs, many=True).data)
+
+
 def confirm_email(request, key):
     email_confirmation = EmailConfirmationHMAC.from_key(key)
     if email_confirmation:
         email_confirmation.confirm(request)
     return HttpResponseRedirect(reverse_lazy('api'))
-
