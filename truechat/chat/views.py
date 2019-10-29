@@ -80,11 +80,13 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if chat.is_member(user):
             return Response(data={"errors": ["User is already in the chat"]}, status=status.HTTP_409_CONFLICT)
-        membership = Membership.objects.get(user=user, chat=chat)
-        if membership.is_banned:
-            return Response(data={"errors": ["User is not in the chat. User is banned."]},
-                            status=status.HTTP_409_CONFLICT)
-
+        try:
+            membership = Membership.objects.get(user=user, chat=chat)
+            if membership.is_banned:
+                return Response(data={"errors": ["User is not in the chat. User is banned."]},
+                                status=status.HTTP_409_CONFLICT)
+        except Membership.DoesNotExist:
+            pass
         chat.users.add(user)
         chat.save()
         return Response(ChatSerializer(chat).data)
