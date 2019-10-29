@@ -1,0 +1,20 @@
+{% load account %}{% user_display user as user_display %}{% load i18n %}{% autoescape off %}{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
+
+Hi, {{ user_display }}!
+We are glad to welcome you in True Chat.
+
+You need to confirm your email address in order to activate your True Chat account. Activating your account will give you more benefits and better control.
+
+If you did not enter this e-mail in the True Chat application, ignore this letter.
+
+Please confirm your account by clicking on the link:
+{{ activate_url }}
+
+Best wishes,
+True Chat Team
+
+{% endblocktrans %}
+{% blocktrans with site_name=current_site.name site_domain=current_site.domain %}
+{{ site_domain }}{% endblocktrans %}
+{% endautoescape %}
+
