@@ -1,9 +1,9 @@
 from chat.views import ChatViewSet
 from rest_framework.routers import DefaultRouter
 
-router = DefaultRouter()
-router.register(r'', ChatViewSet, basename='chats')
+chats_router = DefaultRouter()
+chats_router.register(r'', ChatViewSet, basename='chats')
 
-urlpatterns = router.urls
+urlpatterns = chats_router.urls
 
 

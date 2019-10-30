@@ -25,4 +25,14 @@ class ChatSerializerChange(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ("name", "description")
+        fields = ("id", "name", "description")
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    chat = ChatSerializerChange()
+    user = UserSerializerGet()
+
+    class Meta:
+        model = Message
+        fields = ("id", "chat", "user", "content", "date_created")
+

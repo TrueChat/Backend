@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from chat.models import Chat, Message, Membership
-from chat.serializers import ChatSerializer, ChatSerializerChange
+from chat.serializers import ChatSerializer, ChatSerializerChange, MessageSerializer
 from custom_auth.models import User
 
 
@@ -180,3 +180,8 @@ class ChatViewSet(viewsets.ModelViewSet):
         chat.users.remove(request.user)
         chat.save()
         return Response(ChatSerializer(chat).data)
+
+
+class MessageViewSet(viewsets.ModelViewSet):
+    serializer_class = MessageSerializer
+    queryset = Message.objects.all()
