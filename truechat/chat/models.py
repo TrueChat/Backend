@@ -52,6 +52,9 @@ class Message(models.Model):
                                help_text='Содержание письма может быть максимум в 4095 символов')
     date_created = models.DateTimeField('Дата создания', default=timezone.now)
 
+    def __str__(self):
+        return f'{self.chat.name}.{self.user.username} - {self.date_created}'
+
     class Meta:
         db_table = 'messages'
         verbose_name = 'Сообщение'

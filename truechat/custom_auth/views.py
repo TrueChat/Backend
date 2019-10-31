@@ -1,16 +1,13 @@
 from allauth.account.models import EmailConfirmationHMAC
-from django.contrib.auth import get_user_model
+from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from rest_framework import permissions, status
-from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from custom_auth.models import User
-
 from custom_auth.serializers import UserSerializerChange, UserSerializerGet
-
-User = get_user_model()
 
 
 class UserIsOwnerOrReadOnly(permissions.BasePermission):
@@ -50,7 +47,6 @@ class UserAPIViewChange(APIView):
 
 
 class UserListView(APIView):
-
     permission_classes = (
         permissions.IsAuthenticated,
     )
