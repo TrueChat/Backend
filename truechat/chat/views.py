@@ -1,6 +1,6 @@
-from rest_framework import permissions, status, viewsets, mixins
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 
@@ -27,7 +27,7 @@ class IsChatMember(permissions.BasePermission):
             if membership.is_banned:
                 return False
         except Membership.DoesNotExist:
-            pass
+            return False
 
         return obj.is_member(request.user)
 
@@ -39,6 +39,13 @@ class IsChatAdmin(permissions.BasePermission):
 
 class IsMessageCreator(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
+        return request.user == obj.user
+
+
+class IsMessageAvailable(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method == 'GET':
+            return IsChatMember.has_object_permission(obj.user, request, view, obj.chat)
         return request.user == obj.user
 
 
@@ -116,10 +123,13 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if chat.creator != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
-        membership = Membership.objects.get(user=user, chat=chat)
-        if membership.is_banned:
-            return Response(data={"errors": ["User is not in the chat. User is banned."]},
-                            status=status.HTTP_409_CONFLICT)
+        try:
+            membership = Membership.objects.get(user=user, chat=chat)
+            if membership.is_banned:
+                return Response(data={"errors": ["User is not in the chat. User is banned."]},
+                                status=status.HTTP_409_CONFLICT)
+        except Membership.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         if not chat.is_member(user):
             return Response(data={"errors": ["User is not in the chat"]}, status=status.HTTP_409_CONFLICT)
         if chat.creator == user:
@@ -225,16 +235,11 @@ class ChatViewSet(viewsets.ModelViewSet):
         return Response(MessageSerializer(queryset, many=True).data)
 
 
-class MessageViewSet(mixins.CreateModelMixin,
-                     mixins.RetrieveModelMixin,
-                     mixins.UpdateModelMixin,
-                     mixins.DestroyModelMixin,
-                     viewsets.GenericViewSet):
-    serializer_class = MessageSerializer
-    queryset = Message.objects.all()
+class MessageAPIView(RetrieveUpdateDestroyAPIView):
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return MessageSerializer
+        return MessageSerializerChange
 
-    def get_permissions(self):
-        permissions_classes = [permissions.IsAuthenticated, IsChatMember]
-        if self.action not in ['retrieve']:
-            permissions_classes += [IsMessageCreator]
-        return [permission() for permission in permissions_classes]
+    queryset = Message.objects.all()
+    permission_classes = [permissions.IsAuthenticated, IsMessageAvailable]
