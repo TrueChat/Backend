@@ -27,6 +27,8 @@ class IsChatMember(permissions.BasePermission):
             if membership.is_banned:
                 return False
         except Membership.DoesNotExist:
+            if obj.creator == request.user:
+                return True
             return False
 
         return obj.is_member(request.user)
