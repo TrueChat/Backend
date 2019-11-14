@@ -34,7 +34,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Message
-        fields = ("id", "user", "content", "chat")
+        fields = ("id", "user", "content", "chat", 'date_created')
 
 
 class MessageSerializerChange(serializers.ModelSerializer):
