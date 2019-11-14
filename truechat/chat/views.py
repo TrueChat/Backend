@@ -77,7 +77,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         if chat.is_valid():
             chat.save(creator=request.user)
             return Response(chat.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(chat.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         serializer = self.get_serializer_class()
