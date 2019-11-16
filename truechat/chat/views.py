@@ -21,6 +21,11 @@ class IsNotBanned(permissions.BasePermission):
         return True
 
 
+class IsChatGroup(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return not obj.is_dialog
+
+
 class IsChatMember(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         try:
@@ -70,6 +75,8 @@ class ChatViewSet(viewsets.ModelViewSet):
             permissions_classes += [IsChatMember]
         elif self.action not in ['list']:
             permissions_classes += [IsChatAdmin]
+        if self.action not in ['retrieve', 'create_private_chat', 'list', 'messages', 'add_message', 'create']:
+            permissions_classes += [IsChatGroup]
         return [permission() for permission in permissions_classes]
 
     def create(self, request, *args, **kwargs):
