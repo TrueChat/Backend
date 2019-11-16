@@ -41,6 +41,7 @@ class Membership(models.Model):
     class Meta:
         db_table = 'Membership'
         unique_together = ['chat', 'user']
+        ordering = ['-date_started']
 
 
 class Message(models.Model):
@@ -59,7 +60,7 @@ class Message(models.Model):
         db_table = 'messages'
         verbose_name = 'Сообщение'
         verbose_name_plural = 'Сообщения'
-
+        ordering = ['-date_created']
 
 class MessageStatus(models.Model):
     id = models.AutoField(primary_key=True)

@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
@@ -55,7 +56,7 @@ class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
 
     def get_serializer_class(self):
-        if self.action in ['add_member', 'ban_member', 'unban_member', 'messages']:
+        if self.action in ['add_member', 'ban_member', 'unban_member', 'messages', 'create_private_chat']:
             return Serializer
         if self.action in ['list', 'retrieve']:
             return ChatSerializer
@@ -83,7 +84,7 @@ class ChatViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer_class()
         membership = Membership.objects.filter(user=request.user, is_banned=False)
         chats = Chat.objects.filter(members__in=membership)
-        queryset = chats.union(Chat.objects.filter(creator=request.user))
+        queryset = chats.union(Chat.objects.filter(creator=request.user)).order_by('-date_created')
         page = self.paginate_queryset(queryset)
         if page is not None and request.GET.get('page') is not None:
             chats = serializer(page, many=True)
@@ -109,6 +110,8 @@ class ChatViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_409_CONFLICT)
         except Membership.DoesNotExist:
             pass
+        if chat.is_dialog:
+            return Response(data={"errors": ["Chat is a dialog"]}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         chat.users.add(user)
         chat.save()
         return Response(ChatSerializer(chat).data)
@@ -125,6 +128,8 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if chat.creator != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        if chat.is_dialog:
+            return Response(data={"errors": ["Chat is a dialog"]}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         try:
             membership = Membership.objects.get(user=user, chat=chat)
             if membership.is_banned:
@@ -154,6 +159,8 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if chat.creator != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        if chat.is_dialog:
+            return Response(data={"errors": ["Chat is a dialog"]}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         if not chat.is_member(user):
             return Response(data={"errors": ["User is not in the chat"]}, status=status.HTTP_409_CONFLICT)
         if chat.creator == user:
@@ -176,6 +183,8 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if chat.creator != request.user:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        if chat.is_dialog:
+            return Response(data={"errors": ["Chat is a dialog"]}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
         if not chat.is_member(user):
             return Response(data={"errors": ["User is not in the chat"]}, status=status.HTTP_409_CONFLICT)
         if chat.creator == user:
@@ -195,6 +204,9 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         except Chat.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
+        if chat.is_dialog:
+            return Response(data={"errors": ["Chat is a dialog"]}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
         if chat.creator == request.user:
             return Response(data={"errors": ["User is the owner of the chat. Chat may be deleted."]},
                             status=status.HTTP_409_CONFLICT)
@@ -235,6 +247,22 @@ class ChatViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(MessageSerializer(page, many=True).data)
 
         return Response(MessageSerializer(queryset, many=True).data)
+
+    @action(detail=False, methods=['post'], url_path='private_chats/(?P<username>[^/.]+)',
+            url_name='create_private_chat')
+    def create_private_chat(self, request, username):
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        us1 = username
+        us2 = request.user.username
+        if Chat.objects.filter(Q(name=f'{us1}-{us2}') | Q(name=f'{us1}-{us2}') & Q(is_dialog=True)).exists():
+            return Response(data={"errors": ["Chat is already existed"]}, status=status.HTTP_409_CONFLICT)
+        chat = Chat.objects.create(name=f'{us1}-{us2}', creator=request.user, is_dialog=True)
+        chat.users.add(user)
+        chat.save()
+        return Response(ChatSerializer(chat).data)
 
 
 class MessageAPIView(RetrieveUpdateDestroyAPIView):
