@@ -264,8 +264,11 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         us1 = username
         us2 = request.user.username
-        if Chat.objects.filter(Q(name=f'{us1}-{us2}') | Q(name=f'{us1}-{us2}') & Q(is_dialog=True)).exists():
-            return Response(data={"errors": ["Chat is already existed"]}, status=status.HTTP_409_CONFLICT)
+        chats = Chat.objects.filter(Q(name=f'{us1}-{us2}') | Q(name=f'{us1}-{us2}') & Q(is_dialog=True))
+        if chats.exists():
+            return Response(
+                data={"errors": ["Chat is already existed"], "data": ChatSerializer(chats, many=True).data},
+                status=status.HTTP_409_CONFLICT)
         chat = Chat.objects.create(name=f'{us1}-{us2}', creator=request.user, is_dialog=True)
         chat.users.add(user)
         chat.save()
