@@ -61,7 +61,8 @@ class ChatViewSet(viewsets.ModelViewSet):
     queryset = Chat.objects.all()
 
     def get_serializer_class(self):
-        if self.action in ['add_member', 'ban_member', 'unban_member', 'messages', 'create_private_chat']:
+        if self.action in ['add_member', 'ban_member', 'unban_member', 'messages', 'create_private_chat',
+                           'get_private_chat']:
             return Serializer
         if self.action in ['list', 'retrieve']:
             return ChatSerializer
@@ -75,7 +76,8 @@ class ChatViewSet(viewsets.ModelViewSet):
             permissions_classes += [IsChatMember]
         elif self.action not in ['list']:
             permissions_classes += [IsChatAdmin]
-        if self.action not in ['retrieve', 'create_private_chat', 'list', 'messages', 'add_message', 'create']:
+        if self.action not in ['retrieve', 'create_private_chat', 'list', 'messages', 'add_message', 'create',
+                               'get_private_chat']:
             permissions_classes += [IsChatGroup]
         return [permission() for permission in permissions_classes]
 
@@ -255,7 +257,7 @@ class ChatViewSet(viewsets.ModelViewSet):
 
         return Response(MessageSerializer(queryset, many=True).data)
 
-    @action(detail=False, methods=['post'], url_path='private_chats/(?P<username>[^/.]+)',
+    @action(detail=False, methods=['post', 'get'], url_path='private_chats/(?P<username>[^/.]+)',
             url_name='create_private_chat')
     def create_private_chat(self, request, username):
         try:
@@ -266,13 +268,19 @@ class ChatViewSet(viewsets.ModelViewSet):
         us2 = request.user.username
         chats = Chat.objects.filter(Q(name=f'{us1}-{us2}') | Q(name=f'{us1}-{us2}') & Q(is_dialog=True))
         if chats.exists():
-            return Response(
-                data={"errors": ["Chat is already existed"], "data": ChatSerializer(chats, many=True).data},
-                status=status.HTTP_409_CONFLICT)
-        chat = Chat.objects.create(name=f'{us1}-{us2}', creator=request.user, is_dialog=True)
-        chat.users.add(user)
-        chat.save()
-        return Response(ChatSerializer(chat).data)
+            if request.method == 'POST':
+                return Response(
+                    data={"errors": ["Chat is already existed"], "data": ChatSerializer(chats, many=True).data},
+                    status=status.HTTP_409_CONFLICT)
+            elif request.method == 'GET':
+                return Response(ChatSerializer(chats, many=True).data)
+        if request.method == 'POST':
+            chat = Chat.objects.create(name=f'{us1}-{us2}', creator=request.user, is_dialog=True)
+            chat.users.add(user)
+            chat.save()
+            return Response(ChatSerializer(chat).data)
+        elif request.method == 'GET':
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 class MessageAPIView(RetrieveUpdateDestroyAPIView):
