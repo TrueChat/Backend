@@ -93,7 +93,13 @@ class ChatViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer_class()
         membership = Membership.objects.filter(user=request.user, is_banned=False)
         chats = Chat.objects.filter(members__in=membership)
-        queryset = chats.union(Chat.objects.filter(creator=request.user)).order_by('-date_created')
+        queryset = chats.union(Chat.objects.filter(creator=request.user))
+        """
+        TODO rewrite this slow sorting
+        """
+        queryset = sorted(queryset,
+                          key=lambda chat: chat.last_message.date_created if chat.last_message else chat.date_created,
+                          reverse=True)
         page = self.paginate_queryset(queryset)
         if page is not None and request.GET.get('page') is not None:
             chats = serializer(page, many=True)
@@ -266,7 +272,7 @@ class ChatViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
         us1 = username
         us2 = request.user.username
-        chats = Chat.objects.filter(Q(name=f'{us1}-{us2}') | Q(name=f'{us1}-{us2}') & Q(is_dialog=True))
+        chats = Chat.objects.filter(Q(name=f'{us1}-{us2}') | Q(name=f'{us2}-{us1}') & Q(is_dialog=True))
         if chats.exists():
             if request.method == 'POST':
                 return Response(

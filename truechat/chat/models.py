@@ -1,6 +1,7 @@
-from custom_auth.models import User
 from django.db import models
 from django.utils import timezone
+
+from custom_auth.models import User
 
 
 class Chat(models.Model):
@@ -17,6 +18,11 @@ class Chat(models.Model):
 
     def is_member(self, user):
         return self.members.filter(user=user).exists() or self.creator == user
+
+    @property
+    def last_message(self):
+        messages = self.messages.order_by('-date_created')
+        return messages.first() if len(messages) else None
 
     def __str__(self):
         return self.name
@@ -61,6 +67,7 @@ class Message(models.Model):
         verbose_name = 'Сообщение'
         verbose_name_plural = 'Сообщения'
         ordering = ['-date_created']
+
 
 class MessageStatus(models.Model):
     id = models.AutoField(primary_key=True)
