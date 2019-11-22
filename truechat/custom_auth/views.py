@@ -71,4 +71,4 @@ def confirm_email(request, key):
     email_confirmation = EmailConfirmationHMAC.from_key(key)
     if email_confirmation:
         email_confirmation.confirm(request)
-    return HttpResponseRedirect(reverse_lazy('api'))
+    return HttpResponseRedirect('http://truechat-client.herokuapp.com/auth')
