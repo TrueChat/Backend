@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'chat.apps.ChatConfig',
     'custom_auth.apps.CustomAuthConfig',
+    'attachments.apps.AttachmentsConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_auth.registration',

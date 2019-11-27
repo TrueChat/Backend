@@ -1,9 +1,13 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
+
+from attachments.models import ImageField
 
 
 class User(AbstractUser):
     about = models.CharField('О себе', max_length=1023, null=True, blank=True)
+    images = GenericRelation(ImageField)
 
     class Meta:
         db_table = 'User'
