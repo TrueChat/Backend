@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 import os
+import re
 
-from django.urls import reverse_lazy
+import cloudinary
 import dj_database_url
 from decouple import config
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,7 +53,24 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'rest_framework_swagger',
     'corsheaders',
+    'cloudinary',
 ]
+CLOUDINARY_URL = config('CLOUDINARY_URL', default=None)
+if CLOUDINARY_URL:
+    CLOUDINARY_API_KEY = re.search('//(.*):', CLOUDINARY_URL).group(1)
+    CLOUDINARY_API_SECRET = re.search(':(.*):(.*)@', CLOUDINARY_URL).group(2)
+    CLOUDINARY_CLOUD_NAME = re.search('@(.*)', CLOUDINARY_URL).group(1)
+else:
+    CLOUDINARY_CLOUD_NAME = os.environ.get('CLOUDINARY_CLOUD_NAME')
+    CLOUDINARY_API_KEY = os.environ.get('CLOUDINARY_API_KEY')
+    CLOUDINARY_API_SECRET = os.environ.get('CLOUDINARY_API_SECRET')
+
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET
+)
+
 SITE_ID = 1
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
