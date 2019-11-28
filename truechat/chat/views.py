@@ -53,6 +53,7 @@ class IsMessageCreator(permissions.BasePermission):
 
 class IsMessageAvailable(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
+        print(request.method)
         if request.method == 'GET':
             return IsChatMember.has_object_permission(obj.user, request, view, obj.chat)
         return request.user == obj.user
@@ -310,11 +311,13 @@ class MessageAPIView(RetrieveUpdateDestroyAPIView, ImageMixin):
 
 
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated, IsMessageAvailable])
+@permission_classes([permissions.IsAuthenticated, IsMessageCreator])
 def message_upload_image(request, pk=None):
     try:
         message = Message.objects.get(pk=pk)
     except Message.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
+    if request.user != message.user:
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
     ImageMixin.post_cloudinary(request, message)
     return Response(MessageSerializer(message).data)
