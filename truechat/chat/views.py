@@ -1,6 +1,6 @@
 from django.db.models import Q
 from rest_framework import permissions, status, viewsets
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
@@ -8,6 +8,7 @@ from rest_framework.serializers import Serializer
 from chat.models import Chat, Message, Membership
 from chat.serializers import ChatSerializer, ChatSerializerChange, MessageSerializer, MessageSerializerChange
 from custom_auth.models import User
+from attachments.views import ImageMixin
 
 
 class IsNotBanned(permissions.BasePermission):
@@ -57,12 +58,12 @@ class IsMessageAvailable(permissions.BasePermission):
         return request.user == obj.user
 
 
-class ChatViewSet(viewsets.ModelViewSet):
+class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
     queryset = Chat.objects.all()
 
     def get_serializer_class(self):
         if self.action in ['add_member', 'ban_member', 'unban_member', 'messages', 'create_private_chat',
-                           'get_private_chat']:
+                           'get_private_chat', 'upload_image']:
             return Serializer
         if self.action in ['list', 'retrieve']:
             return ChatSerializer
@@ -288,8 +289,17 @@ class ChatViewSet(viewsets.ModelViewSet):
         elif request.method == 'GET':
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+    @action(detail=True, methods=['post'], url_path='upload_image')
+    def upload_image(self, request, pk=None):
+        try:
+            chat = self.get_object()
+        except Chat.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        self.post_cloudinary(request, chat)
+        return Response(ChatSerializer(chat).data)
 
-class MessageAPIView(RetrieveUpdateDestroyAPIView):
+
+class MessageAPIView(RetrieveUpdateDestroyAPIView, ImageMixin):
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return MessageSerializer
@@ -297,3 +307,14 @@ class MessageAPIView(RetrieveUpdateDestroyAPIView):
 
     queryset = Message.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsMessageAvailable]
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated, IsMessageAvailable])
+def message_upload_image(request, pk=None):
+    try:
+        message = Message.objects.get(pk=pk)
+    except Message.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    ImageMixin.post_cloudinary(request, message)
+    return Response(MessageSerializer(message).data)

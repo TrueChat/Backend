@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, re_path
 from rest_framework_swagger.views import get_swagger_view
 
-from custom_auth.views import UserListView, UserAPIViewChange, confirm_email
+from custom_auth.views import UserListView, UserAPIViewChange, confirm_email, user_upload_image
 
 schema_view = get_swagger_view(title='TrueChat API')
 
@@ -20,9 +20,11 @@ urlpatterns = [
         name='account_email_verification_sent'),
 
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
+    url(r'profile/upload_image/', user_upload_image),
     re_path(r'profile/(?P<username>\w+|)', UserAPIViewChange.as_view()),
     re_path(r'profiles/(?P<search_string>\w+|)', UserListView.as_view()),
 
     re_path(r'chats/', include('chat.urls')),
+    re_path(r'messages/', include('chat.message_urls')),
     path('admin/', admin.site.urls)
 ]

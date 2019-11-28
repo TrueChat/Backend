@@ -3,7 +3,7 @@ from django.db import models
 from django.utils import timezone
 
 from custom_auth.models import User
-from attachments.models import ImageField
+from attachments.models import Image
 
 
 class Chat(models.Model):
@@ -18,7 +18,7 @@ class Chat(models.Model):
     is_dialog = models.BooleanField('Личная ли переписка', default=False)
     users = models.ManyToManyField(User, related_name='chats', through='Membership')
     date_created = models.DateTimeField('Дата создания', default=timezone.now)
-    images = GenericRelation(ImageField)
+    images = GenericRelation(Image)
 
     def is_member(self, user):
         return self.members.filter(user=user).exists() or self.creator == user
@@ -65,7 +65,7 @@ class Message(models.Model):
     content = models.CharField('Содержание письма', max_length=4095,
                                help_text='Содержание письма может быть максимум в 4095 символов')
     date_created = models.DateTimeField('Дата создания', default=timezone.now)
-    images = GenericRelation(ImageField)
+    images = GenericRelation(Image)
 
     def __str__(self):
         return f'{self.chat.name}.{self.user.username} - {self.date_created}'

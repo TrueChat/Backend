@@ -3,11 +3,13 @@ from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.http import HttpResponseRedirect
 from django.urls import reverse_lazy
 from rest_framework import permissions, status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from custom_auth.models import User
 from custom_auth.serializers import UserSerializerChange, UserSerializerGet
+from attachments.views import ImageMixin
 
 
 class UserIsOwnerOrReadOnly(permissions.BasePermission):
@@ -72,3 +74,12 @@ def confirm_email(request, key):
     if email_confirmation:
         email_confirmation.confirm(request)
     return HttpResponseRedirect('http://truechat-client.herokuapp.com/auth')
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def user_upload_image(request):
+    print('_______________________________')
+    user = request.user
+    ImageMixin.post_cloudinary(request, user)
+    return Response(UserSerializerGet(user).data)
