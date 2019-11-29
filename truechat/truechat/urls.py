@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'profile/upload_image/', user_upload_image),
     re_path(r'profile/(?P<username>\w+|)', UserAPIViewChange.as_view()),
     re_path(r'profiles/(?P<search_string>\w+|)', UserListView.as_view()),
+    re_path(r'images/', include('attachments.urls')),
 
     re_path(r'chats/', include('chat.urls')),
     re_path(r'messages/', include('chat.message_urls')),

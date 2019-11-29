@@ -79,7 +79,6 @@ def confirm_email(request, key):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def user_upload_image(request):
-    print('_______________________________')
     user = request.user
     ImageMixin.post_cloudinary(request, user)
     return Response(UserSerializerGet(user).data)

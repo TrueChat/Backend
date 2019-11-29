@@ -1,3 +1,4 @@
+import cloudinary
 from cloudinary.models import CloudinaryField
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -20,6 +21,10 @@ class Image(models.Model):
 
     def __str__(self):
         return self.name
+
+    def delete(self, *args, **kwargs):
+        cloudinary.uploader.destroy(self.name)
+        super(Image, self).delete(*args, **kwargs)
 
     class Meta:
         db_table = 'Picture'
