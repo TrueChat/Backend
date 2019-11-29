@@ -318,6 +318,6 @@ def message_upload_image(request, pk=None):
     except Message.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
     if request.user != message.user:
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return Response(status=status.HTTP_403_FORBIDDEN)
     ImageMixin.post_cloudinary(request, message)
     return Response(MessageSerializer(message).data)
