@@ -5,10 +5,10 @@ from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 
+from attachments.views import ImageMixin
 from chat.models import Chat, Message, Membership
 from chat.serializers import ChatSerializer, ChatSerializerChange, MessageSerializer, MessageSerializerChange
 from custom_auth.models import User
-from attachments.views import ImageMixin
 
 
 class IsNotBanned(permissions.BasePermission):
@@ -111,6 +111,7 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['post'], url_path='add_member/(?P<username>[^/.]+)', url_name='add_member')
     def add_member(self, request, username, pk=None):
+        """Add member to an existing chat"""
         try:
             user = User.objects.get(username=username)
             chat = self.get_object()

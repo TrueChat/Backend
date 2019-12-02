@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'cloudinary',
 ]
+
 CLOUDINARY_URL = config('CLOUDINARY_URL', default=None)
 if CLOUDINARY_URL:
     CLOUDINARY_API_KEY = re.search('//(.*):', CLOUDINARY_URL).group(1)

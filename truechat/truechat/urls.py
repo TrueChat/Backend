@@ -20,6 +20,7 @@ urlpatterns = [
         name='account_email_verification_sent'),
 
     url(r'^rest-auth/registration/', include('rest_auth.registration.urls')),
+
     url(r'profile/upload_image/', user_upload_image),
     re_path(r'profile/(?P<username>\w+|)', UserAPIViewChange.as_view()),
     re_path(r'profiles/(?P<search_string>\w+|)', UserListView.as_view()),
@@ -27,5 +28,6 @@ urlpatterns = [
 
     re_path(r'chats/', include('chat.urls')),
     re_path(r'messages/', include('chat.message_urls')),
+
     path('admin/', admin.site.urls)
 ]
