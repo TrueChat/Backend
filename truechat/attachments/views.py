@@ -31,9 +31,6 @@ class ImageMixin:
             image = Image(name=image_name, imageURL=image_url, content_object=obj)
             image.save()
 
-    def load_image_cloudinary(self, image: Image):
-        print(image.imageURL)
-
     @staticmethod
     def can_change_photo(user, image):
         obj = image.content_object
