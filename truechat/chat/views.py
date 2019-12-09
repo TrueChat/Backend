@@ -1,4 +1,5 @@
-from django.db.models import Q
+from django.db.models import Q, Max
+from django.db.models.functions import Coalesce
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.generics import RetrieveUpdateDestroyAPIView
@@ -94,14 +95,11 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
     def list(self, request, *args, **kwargs):
         serializer = self.get_serializer_class()
         membership = Membership.objects.filter(user=request.user, is_banned=False)
-        chats = Chat.objects.filter(members__in=membership)
-        queryset = chats.union(Chat.objects.filter(creator=request.user))
-        """
-        TODO rewrite this slow sorting
-        """
-        queryset = sorted(queryset,
-                          key=lambda chat: chat.last_message.date_created if chat.last_message else chat.date_created,
-                          reverse=True)
+        queryset = Chat.objects.filter(Q(members__in=membership) | Q(creator=request.user))\
+            .select_related('creator').prefetch_related('images', 'creator__images', 'messages')\
+            .annotate(date_last_change=Coalesce(Max('messages__date_created'), 'date_created'))\
+            .order_by('-date_last_change')
+
         page = self.paginate_queryset(queryset)
         if page is not None and request.GET.get('page') is not None:
             chats = serializer(page, many=True)

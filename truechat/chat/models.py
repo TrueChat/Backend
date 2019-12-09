@@ -23,11 +23,6 @@ class Chat(models.Model):
     def is_member(self, user):
         return self.members.filter(user=user).exists() or self.creator == user
 
-    @property
-    def last_message(self):
-        messages = self.messages.order_by('-date_created')
-        return messages.first() if len(messages) else None
-
     def __str__(self):
         return self.name
 

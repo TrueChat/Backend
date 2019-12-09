@@ -4,6 +4,7 @@ from rest_framework.serializers import Serializer
 from attachments.serializers import ImageFieldSerializer
 from chat.models import Chat, Message
 from custom_auth.serializers import UserSerializerGet
+from custom_auth.models import User
 
 
 class ChatSerializer(serializers.ModelSerializer):
@@ -14,13 +15,16 @@ class ChatSerializer(serializers.ModelSerializer):
     images = ImageFieldSerializer(many=True)
 
     def get_last_message(self, instance):
-        return MessageSerializer(
-            instance.last_message).data if instance.last_message else Serializer(None).data
+        try:
+            last_message = instance.messages.select_related('user', 'chat').prefetch_related('images', 'user__images')\
+                    .latest('date_created')
+        except Message.DoesNotExist:
+            last_message = None
+        return MessageSerializer(last_message).data if last_message else Serializer(None).data
 
     def get_users(self, instance):
-        users = []
-        for member in instance.members.filter(is_banned=False):
-            users.append(member.user)
+        users = User.objects.prefetch_related('images', 'memberships')\
+            .filter(memberships__in=instance.members.filter(is_banned=False))
         return UserSerializerGet(users, many=True).data
 
     class Meta:
