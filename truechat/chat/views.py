@@ -257,7 +257,7 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
             chat = self.get_object()
         except Chat.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        queryset = chat.messages.all()
+        queryset = chat.messages.select_related('chat', 'user').prefetch_related('images', 'user__images')
         page = self.paginate_queryset(queryset)
         if page is not None and request.GET.get('page') is not None:
             return self.get_paginated_response(MessageSerializer(page, many=True).data)
