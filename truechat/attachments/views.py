@@ -46,6 +46,13 @@ class ImageMixin:
 @api_view(['DELETE'])
 @permission_classes([permissions.IsAuthenticated])
 def message_destroy_image(request, pk=None):
+    """
+    Deletes message by its id
+
+    :param request:
+    :param pk:
+    :return:
+    """
     try:
         image = Image.objects.get(pk=pk)
     except Image.DoesNotExist:

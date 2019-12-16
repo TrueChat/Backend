@@ -1,15 +1,14 @@
 from allauth.account.models import EmailConfirmationHMAC
 from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
 from django.http import HttpResponseRedirect
-from django.urls import reverse_lazy
 from rest_framework import permissions, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from attachments.views import ImageMixin
 from custom_auth.models import User
 from custom_auth.serializers import UserSerializerChange, UserSerializerGet
-from attachments.views import ImageMixin
 
 
 class UserIsOwnerOrReadOnly(permissions.BasePermission):
@@ -28,6 +27,13 @@ class UserAPIViewChange(APIView):
         return self.request.user
 
     def put(self, request, username=None):
+        """
+        Updates information about user
+
+        :param request:
+        :param username:
+        :return:
+        """
         user = self.get_object()
         if username and user.username != username:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -38,6 +44,13 @@ class UserAPIViewChange(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get(self, request, username=None):
+        """
+        Returns full information about user
+
+        :param request:
+        :param username:
+        :return:
+        """
         user = self.get_object()
         if username:
             try:
@@ -54,6 +67,13 @@ class UserListView(APIView):
     )
 
     def get(self, request, search_string=None):
+        """
+        Returns profiles which contain searching string
+
+        :param request:
+        :param search_string:
+        :return:
+        """
         query = SearchQuery(search_string)
 
         username_vector = SearchVector('username', weight='A')
@@ -79,6 +99,12 @@ def confirm_email(request, key):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def user_upload_image(request):
+    """
+    Adds photo to profile
+
+    :param request:
+    :return:
+    """
     user = request.user
     ImageMixin.post_cloudinary(request, user)
     return Response(UserSerializerGet(user).data)

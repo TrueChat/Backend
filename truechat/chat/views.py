@@ -61,6 +61,16 @@ class IsMessageAvailable(permissions.BasePermission):
 
 
 class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
+    """
+    retrieve: Returns definite chat by its id with full information about its users
+
+    update: Updates definite chat by its id
+
+    partial_update: Partially updates definite chat by its id
+
+
+    delete: Deletes definite chat by its id
+    """
     queryset = Chat.objects.all()
 
     def get_serializer_class(self):
@@ -85,6 +95,14 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
         return [permission() for permission in permissions_classes]
 
     def create(self, request, *args, **kwargs):
+        """
+        Creates chat with description
+
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         serializer = self.get_serializer_class()
         chat = serializer(data=request.data)
         if chat.is_valid():
@@ -93,6 +111,14 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
         return Response(chat.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
+        """
+        Returns chats related to user with full information about them
+
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
         serializer = self.get_serializer_class()
         membership = Membership.objects.filter(user=request.user, is_banned=False)
         queryset = Chat.objects.filter(Q(members__in=membership) | Q(creator=request.user))\
@@ -109,7 +135,14 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['post'], url_path='add_member/(?P<username>[^/.]+)', url_name='add_member')
     def add_member(self, request, username, pk=None):
-        """Add member to an existing chat"""
+        """
+        Adds user by username to a specified by id chat
+
+        :param request:
+        :param username:
+        :param pk:
+        :return:
+        """
         try:
             user = User.objects.get(username=username)
             chat = self.get_object()
@@ -134,7 +167,14 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['delete'], url_path='delete_member/(?P<username>[^/.]+)', url_name='del_member')
     def del_member(self, request, username, pk=None):
-        """Creator can delete everyone"""
+        """
+        Deletes user by username from specified by id chat
+
+        :param request:
+        :param username:
+        :param pk:
+        :return:
+        """
         try:
             user = User.objects.get(username=username)
             chat = self.get_object()
@@ -165,7 +205,14 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['put'], url_path='ban_member/(?P<username>[^/.]+)', url_name='ban_member')
     def ban_member(self, request, username, pk=None):
-        """Creator can ban everyone"""
+        """
+        Bans user by username in the specified by id chat
+
+        :param request:
+        :param username:
+        :param pk:
+        :return:
+        """
         try:
             user = User.objects.get(username=username)
             chat = self.get_object()
@@ -189,7 +236,14 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['put'], url_path='unban_member/(?P<username>[^/.]+)', url_name='unban_member')
     def unban_member(self, request, username, pk=None):
-        """Creator can unban everyone"""
+        """
+        Unbans user by username in the specified by id chat
+
+        :param request:
+        :param username:
+        :param pk:
+        :return:
+        """
         try:
             user = User.objects.get(username=username)
             chat = self.get_object()
@@ -213,7 +267,13 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['delete'])
     def delete_member(self, request, pk=None):
-        """Delete current user from the given chat"""
+        """
+        Deletes current user from the specified by id chat
+
+        :param request:
+        :param pk:
+        :return:
+        """
         try:
             chat = self.get_object()
         except User.DoesNotExist:
@@ -237,6 +297,13 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['post'], url_path='add_message')
     def add_message(self, request, pk=None):
+        """
+        Adds message to a specified by id chat
+
+        :param request:
+        :param pk:
+        :return:
+        """
         user = request.user
         try:
             chat = self.get_object()
@@ -253,6 +320,13 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['get'], url_path='messages')
     def messages(self, request, pk=None):
+        """
+        Returns messages of specified by id chat
+
+        :param request:
+        :param pk:
+        :return:
+        """
         try:
             chat = self.get_object()
         except Chat.DoesNotExist:
@@ -267,6 +341,14 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
     @action(detail=False, methods=['post', 'get'], url_path='private_chats/(?P<username>[^/.]+)',
             url_name='create_private_chat')
     def create_private_chat(self, request, username):
+        """
+         get: Returns private chats related to user by username
+        post: Creates private chat for specified user by its username
+
+        :param request:
+        :param username:
+        :return:
+        """
         try:
             user = User.objects.get(username=username)
         except User.DoesNotExist:
@@ -291,6 +373,13 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
     @action(detail=True, methods=['post'], url_path='upload_image')
     def upload_image(self, request, pk=None):
+        """
+        Adds image to specified by id chat
+
+        :param request:
+        :param pk:
+        :return:
+        """
         try:
             chat = self.get_object()
         except Chat.DoesNotExist:
@@ -300,6 +389,12 @@ class ChatViewSet(viewsets.ModelViewSet, ImageMixin):
 
 
 class MessageAPIView(RetrieveUpdateDestroyAPIView, ImageMixin):
+    """
+    get: Returns message by its id
+    put: Updates message
+    patch: Partially updates message
+    delete: Deletes message by its id
+    """
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return MessageSerializer
@@ -312,6 +407,13 @@ class MessageAPIView(RetrieveUpdateDestroyAPIView, ImageMixin):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated, IsMessageCreator])
 def message_upload_image(request, pk=None):
+    """
+    Adds photo to message specified by id
+
+    :param request:
+    :param pk:
+    :return:
+    """
     try:
         message = Message.objects.get(pk=pk)
     except Message.DoesNotExist:
